@@ -1,101 +1,137 @@
-import Image from "next/image";
+import { ConnectButton, useAddRecentTransaction } from '@rainbow-me/rainbowkit';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { AddNewTokenButton, MintTokensButton, RedeemTokensButton } from "@/components/ButtonActions";
+import { Button } from '@/components/ui/button';
+import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { abi } from "@/app/abi";
+import { wagmiConfig } from "@/components/wallet-providers";
+import { readContract } from 'wagmi/actions';
+import { useState } from 'react';
+const { isConnected } = useAccount();
+const { data: hash, writeContract } = useWriteContract();
+const addRecentTransaction = useAddRecentTransaction();
+const CONTRACT_ADDRESS = '0x3C29D937B1B9D6DaBaC8CE733595F1cBB0E0b3DF';
+const tokensList: { [key: string]: any } = {};
 
-export default function Home() {
+function Page() {
+
+  async function readTokens(input: string) {
+    const tokens = await readContract(wagmiConfig, {
+      abi: abi,
+      address: CONTRACT_ADDRESS,
+      functionName: "getToken",
+      args: [input],
+    });
+    console.log("numberOfGumballs for : " + input, tokens);
+    tokensList[input] = tokens;
+  }
+  async function addToken(input: string) {
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: abi,
+      functionName: "addToken",
+      args: [input],
+    });
+    // update state with new gumball count from contract
+    await readTokens(input);
+    // add transaction to recent transactions
+    if (hash) {
+      console.log("hash: ", hash);
+      addRecentTransaction({
+        hash: hash,
+        description: "added token called " + input,
+        confirmations: 2,
+      });
+    }
+  }
+  async function mintTokens(tokenID: number, amount: number) {
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: abi,
+      functionName: "mintToken",
+      args: [tokenID, amount],
+    });
+    // update state with new gumball count from contract
+    //await readTokens(input);
+    // add transaction to recent transactions
+    if (hash) {
+      console.log("hash: ", hash);
+      addRecentTransaction({
+        hash: hash,
+        description: "new token minted for " + tokenID + " amount " + amount,
+        confirmations: 2,
+      });
+    }
+  }
+  async function redeemTokens(tokenID: number, amount: number) {
+    writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: abi,
+      functionName: "redeemToken",
+      args: [tokenID, amount],
+    });
+    // update state with new gumball count from contract
+    //await readTokens(input);
+    // add transaction to recent transactions
+    if (hash) {
+      console.log("hash: ", hash);
+      addRecentTransaction({
+        hash: hash,
+        description: "redeemed token for " + tokenID + " amount " + amount,
+        confirmations: 2,
+      });
+    }
+  }
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'flex-start',
+        padding: 12,
+      }}
+    >
+      <Card className="ml-10">
+        <CardHeader>
+          <CardTitle>Add New Token</CardTitle>
+          <CardDescription>Create a new token for a new celebrity</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AddNewTokenButton />
+        </CardContent>
+      </Card>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <Card className="ml-10">
+        <CardHeader>
+          <CardTitle>Mint More Tokens</CardTitle>
+          <CardDescription>Mint additional tokens for existing celebrities</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <MintTokensButton />
+        </CardContent>
+      </Card>
+
+      <Card className="ml-10">
+        <CardHeader>
+          <CardTitle>Redeem Tokens</CardTitle>
+          <CardDescription>Redeem your tokens for rewards</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RedeemTokensButton />
+        </CardContent>
+      </Card>
+
+      <div className="ml-auto">
+        <ConnectButton />
+      </div>
     </div>
   );
 }
+
+export default Page;
