@@ -2,13 +2,13 @@
 
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { sepolia, baseSepolia } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 export const wagmiConfig = getDefaultConfig({
   appName: "rainbow-hw",
-  projectId: process.env.WALLET_CONNECT_PROJECT_ID || "PROJECT_ID",
-  chains: [sepolia],
+  projectId: process.env.WALLET_CONNECT_PROJECT_ID || "60bd7b0cefb2f04a9a5fe020f741a96a",
+  chains: [baseSepolia],
   ssr: true,
 });
 

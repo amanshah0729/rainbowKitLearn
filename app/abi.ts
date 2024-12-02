@@ -25,24 +25,25 @@ export const abi = [
           "type": "string"
         }
       ],
-      "name": "getToken",
+      "name": "getTokenBalance",
       "outputs": [
         {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "id",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct Engagemint.Token",
+          "internalType": "uint256",
           "name": "",
-          "type": "tuple"
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTokenNames",
+      "outputs": [
+        {
+          "internalType": "string[]",
+          "name": "",
+          "type": "string[]"
         }
       ],
       "stateMutability": "view",
@@ -52,7 +53,7 @@ export const abi = [
       "inputs": [
         {
           "internalType": "string",
-          "name": "tokenId",
+          "name": "name",
           "type": "string"
         },
         {
@@ -70,7 +71,7 @@ export const abi = [
       "inputs": [
         {
           "internalType": "string",
-          "name": "tokenId",
+          "name": "name",
           "type": "string"
         },
         {
@@ -128,16 +129,11 @@ export const abi = [
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "balance",
+          "name": "",
           "type": "uint256"
         }
       ],
       "stateMutability": "view",
       "type": "function"
     }
-  ]
+  ];
