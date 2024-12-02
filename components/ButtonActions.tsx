@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAccount, useWriteContract } from 'wagmi';
 import { abi } from "@/app/abi";
@@ -10,8 +10,69 @@ import { readContract } from 'wagmi/actions';
 
 // Define the contract address as a global constant
 const CONTRACT_ADDRESS = '0x31717fD782f9070d6bCFdA3d73102013E0A30354';
+let tokenCounts: { [key: string]: any } = {};
 
+//this is illegal i cant export something then useeffect it
+/*
+Issues: 
+1. I want to have this function update token counts be imported in tokenCArd so i don't have to redefine it but it's a pain bc its not exporting
+2. I need to figure out how to make it so i call update token counts and then tokenCard is able to update using that info (I set a state variable to something and then tokenCard autoupdates even though they're different exports)
+3. I want to figure out what can be inside of an export and what can't becuase it works to have contract address outside and i keep redefining the same variables as it is now
+*/
+export async function updateTokenCounts(){
+  async function readTokens(token: string) {
+    try {
+      const count = await readContract(wagmiConfig, {
+        abi: abi,
+        address: CONTRACT_ADDRESS,
+        functionName: "getTokenBalance",
+        args: [token],
+      });
+      console.log("heres the balance for token", token, count );
+      return count;
+    } catch (error) {
+      console.error(`Error reading token ${token}:`, error);
+      return null;
+    }
+  }
+  async function readTokenNames(): Promise<string[]> {
+      try {
+          console.log("read token names function just called");
+          const tokenData = await readContract(wagmiConfig, {
+              abi: abi,
+              address: CONTRACT_ADDRESS,
+              functionName: "getTokenNames",
+          });
+          console.log("heres the names", tokenData);
+          return tokenData as string[];
 
+      } catch (error) {
+          console.error(`Error reading token names`, error);
+          return [];
+      }
+  }
+
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      try {
+        const tokenNames = await readTokenNames();
+
+        const tokenDetails = await Promise.all(
+          tokenNames.map(async (token) => {
+            const count = await readTokens(token);
+            return { token, count };
+          })
+        );
+        //right here set tokenCounts  = tokenDetails
+        tokenCounts = tokenDetails;
+      } catch (error) {
+        console.error("Error fetching token data:", error);
+      }
+    };
+
+    fetchTokenData();
+  }, []);
+}
 
 export function AddNewTokenButton() {
   const { isConnected } = useAccount();
@@ -28,6 +89,9 @@ export function AddNewTokenButton() {
         functionName: "addToken",
         args: [input],
       });
+
+      // Reset input field
+      setInput("");
 
       // Use the global readTokens function
 
@@ -55,9 +119,13 @@ export function AddNewTokenButton() {
       />
       <Button
         onClick={() => {
-          handleAddNewToken(input).catch((error) => {
-            console.error("Error adding new token:", error);
-          });
+          if (input.trim() !== "") {
+            handleAddNewToken(input).catch((error) => {
+              console.error("Error adding new token:", error);
+            });
+          } else {
+            console.error("Token name cannot be empty");
+          }
         }}
         className="mt-3"
       >
@@ -84,6 +152,10 @@ export function MintTokensButton() {
         functionName: "mintToken",
         args: [tokenID, amount],
       });
+
+      // Reset input fields
+      setTokenID("");
+      setAmount("");
 
       // Add transaction to recent transactions
       if (hash) {
@@ -148,6 +220,10 @@ export function RedeemTokensButton() {
         functionName: "redeemToken",
         args: [tokenName, amount],
       });
+
+      // Reset input fields
+      setTokenName("");
+      setAmount("");
 
       // Add transaction to recent transactions
       if (hash) {

@@ -13,6 +13,7 @@ import {
   import { wagmiConfig } from "@/components/wallet-providers";
   import { readContract } from "wagmi/actions";
   import { useState, useEffect } from "react";
+  import { updateTokenCounts } from "@/components/ButtonActions";
   
   export const TokenCard = () => {
     const tokenList = ["helloToken", "nameToken"];
@@ -31,7 +32,7 @@ import {
           functionName: "getTokenBalance",
           args: [token],
         });
-        console.log("heres the balance", count );
+        console.log("heres the balance for token", token, count );
         return count;
       } catch (error) {
         console.error(`Error reading token ${token}:`, error);
@@ -56,6 +57,7 @@ import {
     }
   
     useEffect(() => {
+    //updateTokenCounts();
       const fetchTokenData = async () => {
         try {
           const tokenNames = await readTokenNames();
@@ -85,7 +87,7 @@ import {
               <ul>
                 {tokenData.map(({ token, count }) => (
                   <li key={token}>
-                    {token}: {count !== null ? count : "Error fetching data"}
+                    {token}: {count !== null ? count.toString() : "Error fetching data"}
                   </li>
                 ))}
               </ul>
