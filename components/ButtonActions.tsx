@@ -7,12 +7,10 @@ import { abi } from "@/app/abi";
 import { useAddRecentTransaction } from '@rainbow-me/rainbowkit';
 import { wagmiConfig } from "@/components/wallet-providers";
 import { readContract } from 'wagmi/actions';
-import { updateTokenCounts } from '@/lib/utils';
 //import { updateTokenCounts } from '@/lib/utils';
 
 // Define the contract address as a global constant
 const CONTRACT_ADDRESS = '0x31717fD782f9070d6bCFdA3d73102013E0A30354';
-let tokenCounts: { [key: string]: any } = {};
 
 //this is illegal i cant export something then useeffect it
 /*
@@ -24,10 +22,8 @@ Issues:
 
 
 export function AddNewTokenButton({ tokenData }: { tokenData: [any, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>] }) {
-  const { isConnected } = useAccount();
-  const { data: hash, isPending, writeContract } = useWriteContract();
+  const { data: hash, writeContract } = useWriteContract();
   const addRecentTransaction = useAddRecentTransaction();
-  const tokensList: { [key: string]: any } = {};
   const [input, setInput] = useState("");
 
 
@@ -60,7 +56,7 @@ export function AddNewTokenButton({ tokenData }: { tokenData: [any, React.Dispat
       console.error("Error adding new token:", error);
     }
   }
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =useWaitForTransactionReceipt({
+  const { isSuccess: isConfirmed } =useWaitForTransactionReceipt({
     hash,
   })
 
@@ -101,10 +97,8 @@ export function AddNewTokenButton({ tokenData }: { tokenData: [any, React.Dispat
 
 
 export function MintTokensButton({ tokenData }: { tokenData: [any, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>] }) {
-  const { isConnected } = useAccount();
   const { data: hash, writeContract } = useWriteContract();
   const addRecentTransaction = useAddRecentTransaction();
-  const tokensList: { [key: string]: any } = {};
   const [tokenID, setTokenID] = useState<string>("");
   const [amount, setAmount] = useState<number | "">("");
 
@@ -138,7 +132,7 @@ export function MintTokensButton({ tokenData }: { tokenData: [any, React.Dispatc
     }
   }
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
 
@@ -185,10 +179,8 @@ export function MintTokensButton({ tokenData }: { tokenData: [any, React.Dispatc
 
 
 export function RedeemTokensButton({ tokenData }: { tokenData: [any, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>] }) {
-  const { isConnected } = useAccount();
   const { data: hash, writeContract } = useWriteContract();
   const addRecentTransaction = useAddRecentTransaction();
-  const tokensList: { [key: string]: any } = {};
   const [tokenName, setTokenName] = useState<string>("");
   const [amount, setAmount] = useState<number | "">("");
 
@@ -222,7 +214,7 @@ export function RedeemTokensButton({ tokenData }: { tokenData: [any, React.Dispa
     }
   }
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const {isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
 
@@ -268,7 +260,7 @@ export function RedeemTokensButton({ tokenData }: { tokenData: [any, React.Dispa
 }
 
 export async function updateTokenInfo(tokenData: [{ [key: string]: number }, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>]) {
-  const [currentTokenData, setTokenData] = tokenData;
+  const [, setTokenData] = tokenData;
   const CONTRACT_ADDRESS = "0x31717fD782f9070d6bCFdA3d73102013E0A30354";
 
   async function readTokens(token: string): Promise<number> {

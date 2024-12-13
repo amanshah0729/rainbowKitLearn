@@ -1,19 +1,17 @@
 "use client";
-import { ConnectButton, useAddRecentTransaction } from '@rainbow-me/rainbowkit';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { AddNewTokenButton, MintTokensButton, RedeemTokensButton } from "@/components/ButtonActions";
 import { TokenCard } from "@/components/tokenCard"; 
 import React from "react";
-import { useAccount } from 'wagmi';
-import { isUserLoggedIn } from './helper';
 import { updateTokenInfo } from '@/components/ButtonActions';
+
 
 //export const ThemeContext = React.createContext({});
 
