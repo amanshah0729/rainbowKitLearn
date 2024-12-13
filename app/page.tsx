@@ -1,3 +1,4 @@
+"use client";
 import { ConnectButton, useAddRecentTransaction } from '@rainbow-me/rainbowkit';
 import {
   Card,
@@ -9,12 +10,22 @@ import {
 } from "@/components/ui/card"
 import { AddNewTokenButton, MintTokensButton, RedeemTokensButton } from "@/components/ButtonActions";
 import { TokenCard } from "@/components/tokenCard"; 
+import React from "react";
+import { useAccount } from 'wagmi';
+import { isUserLoggedIn } from './helper';
+import { updateTokenInfo } from '@/components/ButtonActions';
+
+//export const ThemeContext = React.createContext({});
 
 function Page() {
+  const [tokenAmounts, setTokenAmounts] = React.useState<{ [key: string]: number }>({});
 
-
-
-
+  React.useEffect(() => {
+    const fetchData = async () => {
+      await updateTokenInfo([tokenAmounts, setTokenAmounts]);
+    };
+    fetchData();
+  }, []);
   return (
     <div
       style={{
@@ -24,6 +35,9 @@ function Page() {
         padding: 12,
       }}
     >
+      <div className="ml-auto">
+        <ConnectButton />
+      </div>
       <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
         <Card className="ml-10">
           <CardHeader>
@@ -31,7 +45,7 @@ function Page() {
             <CardDescription>Create a new token for a new celebrity</CardDescription>
           </CardHeader>
           <CardContent>
-            <AddNewTokenButton />
+            <AddNewTokenButton tokenData={[tokenAmounts, setTokenAmounts]} />
           </CardContent>
         </Card>
 
@@ -41,7 +55,7 @@ function Page() {
             <CardDescription>Mint additional tokens for existing celebrities</CardDescription>
           </CardHeader>
           <CardContent>
-            <MintTokensButton />
+            <MintTokensButton tokenData={[tokenAmounts, setTokenAmounts]} />
           </CardContent>
         </Card>
 
@@ -51,16 +65,13 @@ function Page() {
             <CardDescription>Redeem your tokens for rewards</CardDescription>
           </CardHeader>
           <CardContent>
-            <RedeemTokensButton />
+            <RedeemTokensButton tokenData={[tokenAmounts, setTokenAmounts]} />
           </CardContent>
         </Card>
       </div>
 
-      <TokenCard />
+      <TokenCard tokenData={tokenAmounts} />
 
-      <div className="ml-auto">
-        <ConnectButton />
-      </div>
     </div>
   );
 }

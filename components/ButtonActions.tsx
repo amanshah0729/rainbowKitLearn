@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { abi } from "@/app/abi";
 import { useAddRecentTransaction } from '@rainbow-me/rainbowkit';
 import { wagmiConfig } from "@/components/wallet-providers";
 import { readContract } from 'wagmi/actions';
+import { updateTokenCounts } from '@/lib/utils';
+//import { updateTokenCounts } from '@/lib/utils';
 
 // Define the contract address as a global constant
 const CONTRACT_ADDRESS = '0x31717fD782f9070d6bCFdA3d73102013E0A30354';
@@ -15,73 +17,22 @@ let tokenCounts: { [key: string]: any } = {};
 //this is illegal i cant export something then useeffect it
 /*
 Issues: 
-1. I want to have this function update token counts be imported in tokenCArd so i don't have to redefine it but it's a pain bc its not exporting
 2. I need to figure out how to make it so i call update token counts and then tokenCard is able to update using that info (I set a state variable to something and then tokenCard autoupdates even though they're different exports)
 3. I want to figure out what can be inside of an export and what can't becuase it works to have contract address outside and i keep redefining the same variables as it is now
+4. I have to redifine variables on each export and i don't like it
 */
-export async function updateTokenCounts(){
-  async function readTokens(token: string) {
-    try {
-      const count = await readContract(wagmiConfig, {
-        abi: abi,
-        address: CONTRACT_ADDRESS,
-        functionName: "getTokenBalance",
-        args: [token],
-      });
-      console.log("heres the balance for token", token, count );
-      return count;
-    } catch (error) {
-      console.error(`Error reading token ${token}:`, error);
-      return null;
-    }
-  }
-  async function readTokenNames(): Promise<string[]> {
-      try {
-          console.log("read token names function just called");
-          const tokenData = await readContract(wagmiConfig, {
-              abi: abi,
-              address: CONTRACT_ADDRESS,
-              functionName: "getTokenNames",
-          });
-          console.log("heres the names", tokenData);
-          return tokenData as string[];
 
-      } catch (error) {
-          console.error(`Error reading token names`, error);
-          return [];
-      }
-  }
 
-  useEffect(() => {
-    const fetchTokenData = async () => {
-      try {
-        const tokenNames = await readTokenNames();
-
-        const tokenDetails = await Promise.all(
-          tokenNames.map(async (token) => {
-            const count = await readTokens(token);
-            return { token, count };
-          })
-        );
-        //right here set tokenCounts  = tokenDetails
-        tokenCounts = tokenDetails;
-      } catch (error) {
-        console.error("Error fetching token data:", error);
-      }
-    };
-
-    fetchTokenData();
-  }, []);
-}
-
-export function AddNewTokenButton() {
+export function AddNewTokenButton({ tokenData }: { tokenData: [any, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>] }) {
   const { isConnected } = useAccount();
-  const { data: hash, writeContract } = useWriteContract();
+  const { data: hash, isPending, writeContract } = useWriteContract();
   const addRecentTransaction = useAddRecentTransaction();
   const tokensList: { [key: string]: any } = {};
   const [input, setInput] = useState("");
 
+
   async function handleAddNewToken(input: string) {
+
     try {
       await writeContract({
         address: CONTRACT_ADDRESS,
@@ -90,10 +41,10 @@ export function AddNewTokenButton() {
         args: [input],
       });
 
+
       // Reset input field
       setInput("");
 
-      // Use the global readTokens function
 
       // Add transaction to recent transactions
       if (hash) {
@@ -104,10 +55,23 @@ export function AddNewTokenButton() {
           confirmations: 2,
         });
       }
+
     } catch (error) {
       console.error("Error adding new token:", error);
     }
   }
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =useWaitForTransactionReceipt({
+    hash,
+  })
+
+  const [hasUpdated, setHasUpdated] = useState(false);
+
+  useEffect(() => {
+    if (isConfirmed && !hasUpdated) {
+      updateTokenInfo(tokenData);
+      setHasUpdated(true);
+    }
+  }, [isConfirmed, hasUpdated, tokenData]);
 
   return (
     <>
@@ -136,7 +100,7 @@ export function AddNewTokenButton() {
 }
 
 
-export function MintTokensButton() {
+export function MintTokensButton({ tokenData }: { tokenData: [any, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>] }) {
   const { isConnected } = useAccount();
   const { data: hash, writeContract } = useWriteContract();
   const addRecentTransaction = useAddRecentTransaction();
@@ -157,6 +121,7 @@ export function MintTokensButton() {
       setTokenID("");
       setAmount("");
 
+
       // Add transaction to recent transactions
       if (hash) {
         console.log("hash: ", hash);
@@ -166,10 +131,25 @@ export function MintTokensButton() {
           confirmations: 2,
         });
       }
+      updateTokenInfo(tokenData);
+
     } catch (error) {
       console.error("Error minting tokens:", error);
     }
   }
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  const [hasUpdated, setHasUpdated] = useState(false);
+
+  useEffect(() => {
+    if (isConfirmed && !hasUpdated) {
+      updateTokenInfo(tokenData);
+      setHasUpdated(true);
+    }
+  }, [isConfirmed, hasUpdated, tokenData]);
 
   return (
     <>
@@ -204,7 +184,7 @@ export function MintTokensButton() {
 }
 
 
-export function RedeemTokensButton() {
+export function RedeemTokensButton({ tokenData }: { tokenData: [any, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>] }) {
   const { isConnected } = useAccount();
   const { data: hash, writeContract } = useWriteContract();
   const addRecentTransaction = useAddRecentTransaction();
@@ -225,6 +205,8 @@ export function RedeemTokensButton() {
       setTokenName("");
       setAmount("");
 
+
+
       // Add transaction to recent transactions
       if (hash) {
         console.log("hash: ", hash);
@@ -234,10 +216,24 @@ export function RedeemTokensButton() {
           confirmations: 2,
         });
       }
+      updateTokenInfo(tokenData);
     } catch (error) {
       console.error("Error redeeming tokens:", error);
     }
   }
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  const [hasUpdated, setHasUpdated] = useState(false);
+
+  useEffect(() => {
+    if (isConfirmed && !hasUpdated) {
+      updateTokenInfo(tokenData);
+      setHasUpdated(true);
+    }
+  }, [isConfirmed, hasUpdated, tokenData]);
 
   return (
     <>
@@ -271,3 +267,60 @@ export function RedeemTokensButton() {
   );
 }
 
+export async function updateTokenInfo(tokenData: [{ [key: string]: number }, React.Dispatch<React.SetStateAction<{ [key: string]: number }>>]) {
+  const [currentTokenData, setTokenData] = tokenData;
+  const CONTRACT_ADDRESS = "0x31717fD782f9070d6bCFdA3d73102013E0A30354";
+
+  async function readTokens(token: string): Promise<number> {
+    try {
+      const count = await readContract(wagmiConfig, {
+        abi: abi,
+        address: CONTRACT_ADDRESS,
+        functionName: "getTokenBalance",
+        args: [token],
+      });
+      console.log("heres the balance for token", token, count);
+      return count as number;
+    } catch (error) {
+      console.error(`Error reading token ${token}:`, error);
+      return 0;
+    }
+  }
+
+  async function readTokenNames(): Promise<string[]> {
+    try {
+      console.log("read token names function just called");
+      const tokenData = await readContract(wagmiConfig, {
+        abi: abi,
+        address: CONTRACT_ADDRESS,
+        functionName: "getTokenNames",
+      });
+      console.log("heres the names", tokenData);
+      return tokenData as string[];
+    } catch (error) {
+      console.error(`Error reading token names`, error);
+      return [];
+    }
+  }
+
+  try {
+    const tokenNames = await readTokenNames();
+
+    const tokenDetails = await Promise.all(
+      tokenNames.map(async (token) => {
+        const count = await readTokens(token);
+        return { [token]: count };
+      })
+    );
+
+    // Merge all token details into a single object
+    const updatedTokenData = tokenDetails.reduce((acc, tokenDetail) => {
+      return { ...acc, ...tokenDetail };
+    }, {});
+
+    setTokenData(updatedTokenData as { [key: string]: number });
+    console.log("updated token data", updatedTokenData);
+  } catch (error) {
+    console.error("Error fetching token data:", error);
+  }
+}

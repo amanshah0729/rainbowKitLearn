@@ -4,7 +4,6 @@ import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import '@rainbow-me/rainbowkit/styles.css';
 import { Providers } from './providers';
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -31,7 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+            {children}
+
+        </Providers>
       </body>
     </html>
   );
